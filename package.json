@@ -1,0 +1,35 @@
+{
+  "name": "create-startup-file",
+  "version": "1.0.3",
+  "description": "Interactive CLI to scaffold a NestJS RBAC admin backend project",
+  "author": "Pawas Mishra",
+  "license": "MIT",
+  "keywords": [
+    "nestjs",
+    "rbac",
+    "boilerplate",
+    "scaffold",
+    "cli",
+    "drizzle",
+    "postgresql"
+  ],
+  "bin": "./bin/create-startup-file.js",
+  "files": [
+    "bin",
+    "template",
+    "README.md"
+  ],
+  "scripts": {
+    "sync:template": "node scripts/sync-template.js",
+    "create:local": "node bin/create-startup-file.js",
+    "prepublishOnly": "npm run sync:template"
+  },
+  "dependencies": {
+    "fs-extra": "^11.3.0",
+    "prompts": "^2.4.2",
+    "validate-npm-package-name": "^5.0.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

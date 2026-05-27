@@ -1,0 +1,6 @@
+apps/
+scripts/
+.git/
+.gitignore
+node_modules/
+*.log
