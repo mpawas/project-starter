@@ -1,6 +1,6 @@
 # create-startup-file
 
-Interactive CLI to scaffold a **NestJS RBAC admin backend** with JWT auth, role guards, Drizzle ORM, PostgreSQL, and Swagger API docs.
+Interactive CLI to scaffold a **NestJS RBAC backend + Next.js web app** with JWT auth, role guards, Drizzle ORM, PostgreSQL, and Swagger API docs.
 
 ## Features
 
@@ -10,6 +10,8 @@ Generated projects include:
 - Role-based access control (RBAC)
 - Drizzle ORM + PostgreSQL
 - Swagger docs at `/api/docs`
+- Next.js web app at `apps/web` with `main website` + `admin` routes in one app
+- Admin-only route protection in web middleware based on authenticated role
 - Global validation, logging, response transform, and exception filters
 
 ## Quick start
@@ -71,20 +73,39 @@ npx create-startup-file my-admin-app -y \
 ```bash
 cd my-admin-app
 npm run backend:install
+npm run web:install
 cp apps/backend/.env.example apps/backend/.env
+cp apps/web/.env.example apps/web/.env
 npm run backend:db:push
 npm run backend:dev
+npm run web:dev
 ```
 
 Open API docs: `http://localhost:3000/api/docs`
+Open web app: `http://localhost:3001`
+
+## Web ↔ Backend auth flow
+
+The web app does not call NestJS directly from the browser. It uses Next.js API routes as a proxy (BFF):
+
+- `POST /api/auth/login` → proxies to backend `POST /auth/login`
+- `POST /api/auth/refresh` → proxies to backend `POST /auth/refresh`
+- `GET /api/auth/session` → reads access token and refreshes it when expired
+- `GET /api/backend/*` → proxies authenticated requests to the backend with `Authorization: Bearer <accessToken>`
+
+Access and refresh tokens are stored in httpOnly cookies. Admin routes are protected in `apps/web/proxy.ts` using backend JWT roles.
 
 ## Generated scripts
 
 | Script | Description |
 |--------|-------------|
 | `npm run backend:install` | Install backend dependencies |
+| `npm run web:install` | Install web dependencies |
 | `npm run backend:dev` | Start backend in watch mode |
+| `npm run web:dev` | Start Next.js web app |
 | `npm run backend:build` | Build backend |
+| `npm run web:build` | Build Next.js web app |
+| `npm run web:start` | Start built Next.js web app |
 | `npm run backend:test` | Run backend tests |
 | `npm run backend:db:push` | Push Drizzle schema to database |
 | `npm run backend:db:migrate` | Run Drizzle migrations |
@@ -104,6 +125,10 @@ Configure `apps/backend/.env`:
 - `JWT_ACCESS_SECRET`
 - `JWT_REFRESH_SECRET`
 - `PORT` (optional, default `3000`)
+
+Configure `apps/web/.env`:
+
+- `BACKEND_API_URL` (default `http://localhost:3000`)
 
 ## Local development (this repo)
 
