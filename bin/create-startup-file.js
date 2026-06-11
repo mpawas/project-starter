@@ -108,6 +108,15 @@ function getBackendPackageName(projectName) {
   return `${projectName}-backend`;
 }
 
+function getWebPackageName(projectName) {
+  if (projectName.startsWith('@') && projectName.includes('/')) {
+    const [scope, name] = projectName.split('/');
+    return `${scope}/${name}-web`;
+  }
+
+  return `${projectName}-web`;
+}
+
 function formatProjectTitle(projectName) {
   const baseName = projectName.includes('/') ? projectName.split('/')[1] : projectName;
 
@@ -161,12 +170,17 @@ function printNextSteps(projectDir, projectName) {
   console.log('\nProject created successfully.\n');
   console.log(`  cd ${relativeDir}`);
   console.log('  npm run backend:install');
+  console.log('  npm run web:install');
   console.log('  cp apps/backend/.env.example apps/backend/.env');
+  console.log('  cp apps/web/.env.example apps/web/.env');
   console.log('  npm run backend:db:push');
   console.log('  npm run backend:dev');
+  console.log('  npm run web:dev');
   console.log('\nAPI docs: http://localhost:3000/api/docs');
+  console.log('Web app: http://localhost:3001');
   console.log(`Root package: ${projectName}`);
   console.log(`Backend package: ${getBackendPackageName(projectName)}\n`);
+  console.log(`Web package: ${getWebPackageName(projectName)}\n`);
 }
 
 async function collectProjectConfig(cliOptions) {
@@ -302,10 +316,18 @@ async function createProject(config) {
     author: config.author,
     license: config.license,
   });
+  updatePackageJson(path.join(targetDir, 'apps/web/package.json'), {
+    name: getWebPackageName(config.projectName),
+    version: config.version,
+    description: `${config.description} web application`,
+    author: config.author,
+    license: config.license,
+  });
 
   const mainTsPath = path.join(targetDir, 'apps/backend/src/main.ts');
   const mainTs = await fse.readFile(mainTsPath, 'utf8');
   const projectTitle = formatProjectTitle(config.projectName);
+  const apiDescription = config.description || `${projectTitle} API documentation`;
 
   await fse.writeFile(
     mainTsPath,
@@ -313,7 +335,7 @@ async function createProject(config) {
       .replace("'RBAC Backend API'", `'${projectTitle} API'`)
       .replace(
         "'NestJS RBAC backend API documentation'",
-        `'${config.description || `${projectTitle} API documentation`}'`,
+        `'${apiDescription}'`,
       )
       .replace("'1.0'", `'${config.version}'`),
   );
